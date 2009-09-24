@@ -1,7 +1,7 @@
 namespace :db do
   namespace :migrate do
 
-    desc 'Migrating Sage Pay plugin database tables.'
+    desc 'Migrates Sage Pay plugin database tables.'
     task :sage_pay => :environment do
       ActiveRecord::Migration.verbose = ENV["VERBOSE"] ? ENV["VERBOSE"] == "true" : true
       ActiveRecord::Migrator.migrate("vendor/plugins/sage_pay/lib/db/migrate/", ENV["VERSION"] ? ENV["VERSION"].to_i : nil)
