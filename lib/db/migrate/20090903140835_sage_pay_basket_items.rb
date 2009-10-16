@@ -11,6 +11,8 @@ class SagePayBasketItems < ActiveRecord::Migration
       
       t.timestamps
     end
+    
+    add_index :sage_pay_basket_items, :payment_id
   end
 
   def self.down

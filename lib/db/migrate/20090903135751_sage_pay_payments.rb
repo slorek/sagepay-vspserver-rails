@@ -20,6 +20,12 @@ class SagePayPayments < ActiveRecord::Migration
       
       t.timestamps
     end
+
+    add_index :sage_pay_payments, :transaction_code
+    add_index :sage_pay_payments, :billing_address_id
+    add_index :sage_pay_payments, :delivery_address_id
+    add_index :sage_pay_payments, :vps_transaction_id
+    add_index :sage_pay_payments, :status
   end
 
   def self.down
