@@ -12,5 +12,10 @@ class SagePay::Address < ActiveRecord::Base
   validates_length_of :post_code, :maximum => 10
   validates_length_of :country, :is => 2, :if => '!country.blank?'
   validates_length_of :state, :is => 2, :if => 'country == "US" and !state.blank?'
+
+  validates_format_of :phone, :with => /\A[-\  0-9A-Za-z\(\)\+]{0,20}\Z/, :message => 'Only numbers, letters, spaces, -, (), and + are allowed'
+  validates_format_of :state, :with => /\A[A-Z]{2}\Z/, :if => 'country == "US" and !state.blank?'
+  validates_format_of :country, :with => /\A[A-Z]{2}\Z/
+  validates_format_of :post_code, :with => /\A[-\ 0-9A-Za-z]{0,10}\Z/
   
 end
