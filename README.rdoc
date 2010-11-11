@@ -1,13 +1,63 @@
-SagePay
-=======
+= SagePay VSP Server Ruby and Rails Plugin
+A rails 2 plugin for interfacing with the Sage Pay VSP Server API protocol.
 
-Introduction goes here.
+Implements ActiveRecord models and database migrations to store transaction data.
 
-
-Example
-=======
-
-Example goes here.
+NOT currently compatible with Rails 3. Will be re-factored as a Rails Engine gem in due course.
 
 
-Copyright (c) 2009 [name of plugin creator], released under the MIT license
+== Example
+=== Registering a transaction:
+
+SagePay::Config.vendor_name      = 'your_vendor_name'
+SagePay::Config.notification_url = 'your_url'
+SagePay::Config.redirect_url     = 'your_url'
+SagePay::Config.environment      = SagePay::Environment::TEST
+
+payment = SagePay::Payment.new(params[:payment])
+payment.description = 'Transaction description'
+
+payment.transaction_code = SagePay::generate_transaction_code
+payment.payment_type = SagePay::Payment::Type::PAYMENT
+payment.currency = 'GBP'
+payment.status = SagePay::Payment::Status::PENDING
+
+payment.delivery_address = payment.billing_address = SagePay::Address.new(params[:address])
+
+payment.basket_items.build(
+	:description => 'Item description',
+	:quantity => 1,
+	:cost => amount
+)
+
+payment.save!
+
+result = @payment.register
+
+if result and (result[:status] == 'OK')
+	# Redirect URL available at result[:next_url]
+else
+	# errors available in result
+end
+
+
+=== Receiving the notification from SagePay (in controller)
+
+def notification
+	if request.post?
+		notification = SagePay::parse_notification(params)
+		
+		if (payment = SagePay::Payment.find_by_transaction_code(notification[:vendor_transaction_code])) and (payment.valid_signature?(notification) and (notification[:status] == 'OK'))
+			payment.auth_no             = notification[:transaction_auth_no]
+			payment.card_type           = notification[:card_type]
+			payment.card_last_4_digits  = notification[:last_4_digits]
+			payment.status              = SagePay::Payment::Status::COMPLETE
+		else
+			payment.status = SagePay::Payment::Status::FAILED
+		end
+      
+		payment.save
+	end
+    
+	render(:text => "Status=OK\r\nRedirectURL=" + SagePay::Config.redirect_url + '/' + payment.id.to_s)
+end
